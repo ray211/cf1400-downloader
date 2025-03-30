@@ -29,6 +29,13 @@ class CF1400Downloader:
         self.db_config = self.config['database']
         self.start = self.config['start']
         self.cf1400 = self.config['cf1400']
+        
+        db_config = self.db_config.copy()
+        if 'database' in db_config and 'dbname' in db_config:
+            db_config.pop('database') 
+            
+        print("[DEBUG] cf1400 section:", self.config.get('cf1400'))
+        
 
     def load_config(self, path: str) -> dict:
         """Loads configuration from a YAML file."""
