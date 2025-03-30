@@ -1,0 +1,18 @@
+start:
+  year: 2024
+  month: 1
+  quarter: 1
+
+cf1400:
+  base_urls:
+    - https://www.cbp.gov/sites/default/files/
+    - https://www.cbp.gov/sites/default/files/assets/documents/
+  filename_base: CF1400 - Record of Vessel in Foreign Trade - Entrances
+  download_dir: pdf_downloads
+
+database:
+  dbname: cf_1400
+  user: postgres
+  password: postgres
+  host: localhost
+  port: 5432
