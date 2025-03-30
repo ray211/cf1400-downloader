@@ -9,6 +9,7 @@ import logging
 import requests
 import psycopg2
 import yaml
+import datetime
 from pathlib import Path
 from typing import Optional, Tuple
 from urllib.parse import urljoin, urlparse, unquote
@@ -33,6 +34,33 @@ class CF1400Downloader:
         """Loads configuration from a YAML file."""
         with open(path, 'r') as f:
             return yaml.safe_load(f)
+        
+    def get_quarter(self, month: int) -> int:
+        return ((month - 1) // 3) + 1
+        
+    def record_downloaded_file(self, year: int, month: int, quarter: int, filename: str, url: str):
+        """
+        Inserts a record into the cf1400_files table after a successful download.
+        """
+        try:
+            conn = psycopg2.connect(**self.db_config)
+            cur = conn.cursor()
+
+            cur.execute(
+                """
+                INSERT INTO cf1400_files (year, month, quarter, pdf_filename, file_url, downloaded_at)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                """, (
+                year, month, quarter, filename, url, datetime.datetime.now()
+            ))
+
+            conn.commit()
+            cur.close()
+            conn.close()
+            print(f"[DB] Recorded file in database: {filename}")
+        except Exception as e:
+            print(f"[DB ERROR] Failed to record {filename}: {e}")
+            
 
     def get_latest_cf1400_entry(self) -> Optional[Tuple[int, int, int]]:
         """
@@ -119,6 +147,7 @@ class CF1400Downloader:
                         for chunk in response.iter_content(chunk_size=8192):
                             f.write(chunk)
                     logger.info(f"File saved to {save_path}")
+                    self.record_downloaded_file(year, month, self.get_quarter(month), filename, full_url)
                     return filename
 
                 except requests.exceptions.HTTPError as e:
